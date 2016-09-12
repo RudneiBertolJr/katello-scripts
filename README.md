@@ -12,4 +12,5 @@ Diretório com scripts para administração das erratas dos CentOS no Katello e 
 
 ## Tasks
 Diretório com script para remoção das tasks penduradas no servidor Katello/Satellite6.
+
 **clear-task.sh**: Script para cancelar as tasks penduradas no Pulp
