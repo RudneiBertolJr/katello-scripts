@@ -1,9 +1,0 @@
-- hosts: priax
-  become: yes
-  tasks:
-  - name: Test Task
-    template: src=/root/discover.sh dest=/root/discover.sh owner=root group=root mode=0777
-  - shell: sh /root/discover.sh
-    args:
-      executable: /bin/bash    
-  - fetch: src=/tmp/interop_doc/discovery.tar dest=/tmp/
