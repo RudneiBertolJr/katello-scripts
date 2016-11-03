@@ -1,0 +1,66 @@
+- hosts: sat5to6
+
+  tasks:
+
+  - name: Subscription Manager is latest
+    yum: name=subscription-manager state=latest
+    when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= 6
+
+  - name: Subscription Manager Tools
+    yum: name={{item}}-migration state=latest
+    with_item:
+     - subscription-manager-migration
+     - subscription-manager-migration-data
+     - openssl
+    when: ansible_os_family == "RedHat" and ansible_distribution_major_version == 6
+
+  - name: Install Katello-CA
+    yum: name=http://$SAT6_FQDN/pub/katello-ca-consumer-latest.noarch.rpm state=present
+
+  - name: Exec RHN to RHSM
+    command: rhn-migrate-classic-to-rhsm --activation-key="ak_rhel6_latest" --org="Default_Organization" --legacy-user=sat5_user --legacy-password=sat5passwd --force
+    when: ansible_os_family == "RedHat" and ansible_distribution_major_version == 6
+
+  - name: Exec subscription-manager on RHEL6
+    command: subscription-manager register --org="Default_Organization" --activationkey="ak_rhel6_latest" --force
+    when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "6"
+
+  - name: Exec subscription-manager on RHEL7
+    command: subscription-manager register  --org="Default_Organization" --activationkey="ak_rhel7_latest"
+    when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "7"
+
+  - name: Exec subscription-manager refresh
+    command: subscription-manager refresh
+    when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= 6
+
+  - name: Katello Agent is Installed
+    yum: name=katello-agent state=installed
+    when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= 6
+
+  - name: Puppet is Installed
+    yum: name=puppet state=installed
+    when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= 6
+
+  - name: Check File puppet.conf exist
+    stat: path=/etc/puppet/puppet.conf
+    register: puppet_stat
+
+  - name: Alter Puppet File server
+    command: puppet config set server $SAT6_FQDN --section agent
+    when: puppet_stat.stat.exists == True
+
+  - name: Alter Puppet File hostname
+    command: puppet config set hostname `hostname` --section agent
+    when: puppet_stat.stat.exists == True
+
+  - name: Exec Puppet Agent
+    command: puppet agent -t
+    when: puppet_stat.stat.exists == True
+
+  - name: Puppet is running and enabled
+    service: name=puppet state=started enabled=yes
+    when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= 6
+
+  - name: Katello Agent is running and enabled
+    service: name=goferd state=started enabled=yes
+    when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= 6

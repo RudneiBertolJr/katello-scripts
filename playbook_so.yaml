@@ -1,0 +1,6 @@
+- hosts: sat5to6
+  tasks:
+  - name: Check S.O Version
+    command: echo "{{ ansible_os_family }} {{ ansible_distribution_major_version }}"
+    register: dist
+  - debug: msg="{{ dist.stdout }}"
