@@ -7,26 +7,32 @@
     when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= 6
 
   - name: Subscription Manager Tools
-    yum: name={{item}}-migration state=latest
-    with_item:
+    yum: name={{item}} state=latest
+    with_items:
      - subscription-manager-migration
      - subscription-manager-migration-data
      - openssl
-    when: ansible_os_family == "RedHat" and ansible_distribution_major_version == 6
+    when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "6"
 
   - name: Install Katello-CA
-    yum: name=http://$SAT6_FQDN/pub/katello-ca-consumer-latest.noarch.rpm state=present
+    yum: name=http://$FQDN_SAT6/pub/katello-ca-consumer-latest.noarch.rpm state=present
+
+  - name: Check File systemid exist
+    stat: path=/etc/sysconfig/rhn/systemid
+    register: rhn_stat
 
   - name: Exec RHN to RHSM
-    command: rhn-migrate-classic-to-rhsm --activation-key="ak_rhel6_latest" --org="Default_Organization" --legacy-user=sat5_user --legacy-password=sat5passwd --force
-    when: ansible_os_family == "RedHat" and ansible_distribution_major_version == 6
+    command: rhn-migrate-classic-to-rhsm --legacy-user=SAT6_USER --legacy-password=SAT5_PASS --destination-user=SAT6_USER --destination-password=SAT6_PASS --environment=Library --force
+    when:
+     - ansible_os_family == "RedHat" and ansible_distribution_major_version == "6"
+     - rhn_stat.stat.exists == True
 
   - name: Exec subscription-manager on RHEL6
-    command: subscription-manager register --org="Default_Organization" --activationkey="ak_rhel6_latest" --force
+    command: subscription-manager register --org="TRF4" --activationkey="ak_rhel6_latest" --force
     when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "6"
 
   - name: Exec subscription-manager on RHEL7
-    command: subscription-manager register  --org="Default_Organization" --activationkey="ak_rhel7_latest"
+    command: subscription-manager register  --org="TRF4" --activationkey="ak_rhel7_latest" --force
     when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "7"
 
   - name: Exec subscription-manager refresh
@@ -34,11 +40,11 @@
     when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= 6
 
   - name: Katello Agent is Installed
-    yum: name=katello-agent state=installed
+    yum: name=katello-agent state=latest update_cache=yes
     when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= 6
 
   - name: Puppet is Installed
-    yum: name=puppet state=installed
+    yum: name=puppet state=latest
     when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= 6
 
   - name: Check File puppet.conf exist
@@ -46,15 +52,11 @@
     register: puppet_stat
 
   - name: Alter Puppet File server
-    command: puppet config set server $SAT6_FQDN --section agent
+    command: puppet config set server $FQDN_SAT6 --section agent
     when: puppet_stat.stat.exists == True
 
   - name: Alter Puppet File hostname
     command: puppet config set hostname `hostname` --section agent
-    when: puppet_stat.stat.exists == True
-
-  - name: Exec Puppet Agent
-    command: puppet agent -t
     when: puppet_stat.stat.exists == True
 
   - name: Puppet is running and enabled
