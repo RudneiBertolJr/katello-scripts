@@ -24,8 +24,7 @@
   - name: Exec RHN to RHSM
     command: rhn-migrate-classic-to-rhsm --legacy-user=SAT6_USER --legacy-password=SAT5_PASS --destination-user=SAT6_USER --destination-password=SAT6_PASS --environment=Library --force
     when:
-     - ansible_os_family == "RedHat" and ansible_distribution_major_version == "6"
-     - rhn_stat.stat.exists == True
+     - ansible_os_family == "RedHat" and ansible_distribution_major_version == "6" and rhn_stat.stat.exists == True
 
   - name: Exec subscription-manager on RHEL6
     command: subscription-manager register --org="TRF4" --activationkey="ak_rhel6_latest" --force
