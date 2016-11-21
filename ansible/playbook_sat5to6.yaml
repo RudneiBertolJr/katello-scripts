@@ -50,7 +50,11 @@
     when: puppet_stat.stat.exists == True
 
   - name: Alter Puppet File hostname
-    command: puppet config set hostname `hostname` --section agent
+    command: puppet config set hostname {{ ansible_fqdn }} --section agent
+    when: puppet_stat.stat.exists == True
+
+  - name: Alter Puppet File certname
+    command: puppet config set certname {{ ansible_fqdn }} --section agent
     when: puppet_stat.stat.exists == True
 
   - name: Exec Puppet Agent
