@@ -27,11 +27,11 @@
      - ansible_os_family == "RedHat" and ansible_distribution_major_version == "6" and rhn_stat.stat.exists == True
 
   - name: Exec subscription-manager on RHEL6
-    command: subscription-manager register --org="TRF4" --activationkey="ak_rhel6_latest" --force
+    command: subscription-manager register --org="Default_Organization" --activationkey="ak_rhel6_latest" --force
     when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "6"
 
   - name: Exec subscription-manager on RHEL7
-    command: subscription-manager register  --org="TRF4" --activationkey="ak_rhel7_latest" --force
+    command: subscription-manager register  --org="Default_Organization" --activationkey="ak_rhel7_latest" --force
     when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "7"
 
   - name: Exec subscription-manager refresh
